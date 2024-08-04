@@ -1,4 +1,5 @@
 # springboot-demo
+## Run in the Local
 Clean and Install the Project:
 
     mvn clean install
@@ -23,3 +24,15 @@ Build Issues:
 If the build fails, run Maven with detailed logging to diagnose the problem:
 
     mvn clean install -X
+
+## Run in Docker
+
+Building and Running the Docker Image
+
+        docker build -t sendevops:latest .
+
+Run the Docker Container:
+
+        docker run -p 8080:8080 sendevops:latest
+
+        
