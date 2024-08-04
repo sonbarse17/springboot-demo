@@ -1,21 +1,12 @@
-package com.example.demo;
+package com.example.sendevops;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
 
 @SpringBootApplication
-public class DemoApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
-    }
-}
+public class SendevopsApplication {
 
-@Controller
-class HelloController {
-    @GetMapping("/")
-    public String hello() {
-        return "index";
+    public static void main(String[] args) {
+        SpringApplication.run(SendevopsApplication.class, args);
     }
 }
