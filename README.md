@@ -1,4 +1,3 @@
-Hello
 # springboot-demo Implementation
 ## Result
 ![image](https://github.com/user-attachments/assets/5012f3c8-5ed9-4f28-8ae7-25abb2b2fcac)
