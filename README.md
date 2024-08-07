@@ -1,8 +1,21 @@
 # springboot-demo Implementation
 ## Result
 ![image](https://github.com/user-attachments/assets/5012f3c8-5ed9-4f28-8ae7-25abb2b2fcac)
-Hello How are you 
-## Run in the Local
+
+## 1. Run in the Local
+### Requirement
+Installing Java 17:
+
+    sudo apt update
+    sudo apt install openjdk-17-jdk
+
+Installing Maven:
+    
+    sudo apt update
+    sudo apt install maven
+
+
+
 Clean and Install the Project:
 
     mvn clean install
@@ -28,7 +41,7 @@ If the build fails, run Maven with detailed logging to diagnose the problem:
 
     mvn clean install -X
 
-## Run in Docker
+## 2. Run in Docker
 
 Building and Running the Docker Image
 
