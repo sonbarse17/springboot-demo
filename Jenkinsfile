@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        java 'jdk17'
+        jdk 'jdk17'
         maven 'maven3'
     }
     environment {
@@ -39,8 +39,8 @@ pipeline {
                 script{
                     withSonarQubeEnv(credentialsId: 'sonar-token') {
                         sh '''$SCANNER_HOME/bin/sonar-scanner \
-                                -Dsonar.projectName=Blogging-app \
-                                -Dsonar.projectKey=Blogging-app \
+                                -Dsonar.projectName=springboot \
+                                -Dsonar.projectKey=springboot \
                                 -Dsonar.java.binaries=target'''
                     }
                 }
@@ -53,26 +53,26 @@ pipeline {
         }
         stage('Docker build and tag') {
             steps {
-                sh "docker build -t fir3eye/test:latest ."
+                sh "docker build -t fir3eye/new:latest ."
             }
         }
         stage('Trivy image Scan') {
             steps {
-                sh "trivy image fir3eye/test:latest --format table -o image.html"
+                sh "trivy image fir3eye/new:latest --format table -o image.html"
             }
         }
         stage('Docker Push Image') {
             steps {
                 script{
                     withDockerRegistry(credentialsId: 'dockerhub') {
-                        sh "docker push fir3eye/test:latest"
+                        sh "docker push fir3eye/new:latest"
                   }
                 }
             }
         }
         stage('Deploy on Container') {
             steps {
-                sh "docker run -d -p 8090:8080 fir3eye/test:latest"
+                sh "docker run -d -p 8090:8080 fir3eye/new:latest"
             }
         }
     }
