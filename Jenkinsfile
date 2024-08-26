@@ -5,15 +5,10 @@ pipeline {
         maven 'maven3'
     }
     environment {
-        SCANNER_HOME = 'sonar-scanner'
+        SCANNER_HOME=tool 'sonar-scanner'
     }
 
     stages {
-        stage('Clean Workspace') {
-            steps {
-                cleanWs()
-            }
-        }
         stage('Git Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Fir3eye/springboot-demo.git'
@@ -34,6 +29,11 @@ pipeline {
                 sh "trivy fs --format table -o fs.html . "
             }
         }
+        stage('Build') {
+            steps {
+                sh "mvn package"
+            }
+        }
         stage("SonarQube Analysis"){
             steps{
                 script{
@@ -46,34 +46,36 @@ pipeline {
                 }
             }
         }
-        stage('Build') {
-            steps {
-                sh "mvn package"
-            }
-        }
         stage('Docker build and tag') {
             steps {
-                sh "docker build -t fir3eye/new:latest ."
+                sh "docker build -t fir3eye/springboot1:latest ."
             }
         }
         stage('Trivy image Scan') {
             steps {
-                sh "trivy image fir3eye/new:latest --format table -o image.html"
+                sh "trivy image fir3eye/springboot1:latest --format table -o image.html"
             }
         }
         stage('Docker Push Image') {
             steps {
                 script{
                     withDockerRegistry(credentialsId: 'dockerhub') {
-                        sh "docker push fir3eye/new:latest"
+                        sh "docker push fir3eye/springboot1:latest"
                   }
                 }
             }
         }
-        stage('Deploy on Container') {
-            steps {
-                sh "docker run -d -p 8090:8080 fir3eye/new:latest"
+		stage('Deploy to kubernets'){
+            steps{
+                script{
+                    withKubeConfig(caCertificate: '', clusterName: 'EKS_CLOUD', contextName: '', credentialsId: 'k8s', namespace: 'default', restrictKubeConfigAccess: false, serverUrl: 'https://B18E12BF81A02624B83DD385816C9EF6.gr7.ap-south-1.eks.amazonaws.com') {
+                        sh "kubectl apply -f deployment.yaml"
+                        sh "kubectl apply -f service.yaml"
+                    }
+                }
             }
         }
+
     }
 }
+        
