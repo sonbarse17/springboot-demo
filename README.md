@@ -34,10 +34,10 @@ If the build fails, run Maven with detailed logging to diagnose the problem:
 
 Building and Running the Docker Image
 
-        docker build -t sendevops:latest .
+        docker build -t springboot-app .
 
 Run the Docker Container:
 
-        docker run -p 8080:8080 sendevops:latest
+        docker run -p 8080:8080 springboot-app:latest
 
         
