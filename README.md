@@ -5,29 +5,18 @@
 ## 1. Run in the Local
 ### Requirement
 Installing Java 17:
-
-    sudo apt update
-    sudo apt install openjdk-17-jdk
+    sudo yum install java-17 -y
 
 Installing Maven:
     
-    sudo apt update
-    sudo apt install maven
+    sudo yum update
+    sudo yum install maven -y
 
 
 
 Clean and Install the Project:
 
-    mvn clean install
-
-
-Compile the Project:
-
-    mvn compile
-
-Build the Project:
-
-    mvn package
+    mvn clean package
 
 Run the Application:
 Or, navigate to the target directory and run the packaged JAR file:
