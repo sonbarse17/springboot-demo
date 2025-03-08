@@ -1,22 +1,28 @@
-# Use a base image with OpenJDK 17
-FROM openjdk:17-jdk-slim
+# Stage 1: Build the application using Maven
+FROM maven:3.9.6-eclipse-temurin-17 AS builder
 
-# Install Maven
-RUN apt-get update && \
-    apt-get install -y maven && \
-    apt-get clean;
-
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy the entire project
-COPY . .
+# Copy pom.xml and download dependencies first (for better caching)
+COPY pom.xml ./
+RUN mvn dependency:go-offline
 
-# Build the project
-RUN mvn clean package
+# Copy the entire project and build the application
+COPY . .  
+RUN mvn clean package -DskipTests
 
-# Expose port 8080
+# Stage 2: Create a lightweight runtime image
+FROM openjdk:17-jdk-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy the built JAR file from the builder stage
+COPY --from=builder /app/target/sendevops-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose the application port
 EXPOSE 8080
 
-# Command to run the JAR file
-ENTRYPOINT ["java", "-jar", "target/sendevops-0.0.1-SNAPSHOT.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
