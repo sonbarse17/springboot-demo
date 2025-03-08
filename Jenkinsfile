@@ -1,81 +1,107 @@
 pipeline {
-    agent any
+    agent { label 'slave' }
     tools {
-        jdk 'jdk17'
         maven 'maven3'
+        jdk 'jdk-17'
     }
     environment {
-        SCANNER_HOME=tool 'sonar-scanner'
-    }
+        SCANNER_HOME = tool 'sonar-scanner'
+        }
+
 
     stages {
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/Fir3eye/springboot-demo.git'
+                echo 'Git Cloning .....'
+                git branch: 'main', url: 'https://github.com/sonbarse17/springboot-demo.git'
+                echo 'Git Cloning Done .....'
             }
         }
-        stage('Compile') {
+        stage('maven compile') {
             steps {
-                sh "mvn compile"
+                echo '*************** Compiling code with Maven **********'
+                sh 'mvn compile'
+                echo '*************** Compiling code with Maven Done **********'
             }
         }
-        stage('Test') {
+        stage('sonar scan') {
             steps {
-                sh "mvn test"
-            }
-        }
-        stage('Trivy FS Scan') {
-            steps {
-                sh "trivy fs --format table -o fs.html . "
-            }
-        }
-        stage('Build') {
-            steps {
-                sh "mvn package"
-            }
-        }
-        stage("SonarQube Analysis"){
-            steps{
-                script{
+                echo 'Scanning Code with SonarQube ....................'
+                script {
                     withSonarQubeEnv(credentialsId: 'sonar-token') {
                         sh '''$SCANNER_HOME/bin/sonar-scanner \
-                                -Dsonar.projectName=springboot \
-                                -Dsonar.projectKey=springboot \
-                                -Dsonar.java.binaries=target'''
+                            -Dsonar.projectName=springboot \
+                            -Dsonar.projectKey=springboot \
+                            -Dsonar.java.binaries=target'''
                     }
                 }
+                echo 'Scanning Code with SonarQube Done ....................'
             }
         }
-        stage('Docker build and tag') {
+        stage("OWASP Dependency Check") {
             steps {
-                sh "docker build -t fir3eye/springboot1:latest ."
+                echo '********** Checking Dependencies **************'
+                
+                script {
+                    withCredentials([string(credentialsId: 'NVD_API_KEY', variable: 'NVD_API_KEY')]) {
+                        sh '''
+                            mvn org.owasp:dependency-check-maven:check \
+                            -DnvdApiKey=${NVD_API_KEY} \
+                            -Dformat=HTML
+                        '''
+                    }
+                }
+                
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+
+                echo '********** Checking Dependencies Done **************'
             }
         }
-        stage('Trivy image Scan') {
+    
+        stage('maven build') {
             steps {
-                sh "trivy image fir3eye/springboot1:latest --format table -o image.html"
+                echo '***** Building with Maven ********'
+                sh 'mvn package'
+                echo '***** maven Built ********'
             }
         }
-        stage('Docker Push Image') {
+        stage('docker build and tag') {
             steps {
-                script{
+                echo '***** Building Docker image *******'
+                script {
+                    sh 'sudo docker build -t sonbarse17/springboot:1.0 .'
+                }
+                echo '***** Docker image Builed Successful*******'
+            }
+        }
+        stage('trivy') {
+            steps {
+                echo '*************** Scanning Image with Trivy **************************'
+                sh 'trivy image sonbarse17/springboot:1.0 --format table -o image.html'
+                echo '************** Image Successfully Scanned By Trivy ******************'
+            }
+        }
+        stage('docker push') {
+            steps {
+                echo '******** Pushing Image to DockerHub *********'
+                script {
                     withDockerRegistry(credentialsId: 'dockerhub') {
-                        sh "docker push fir3eye/springboot1:latest"
-                  }
-                }
-            }
-        }
-		stage('Deploy to kubernets'){
-            steps{
-                script{
-                    withKubeConfig(caCertificate: '', clusterName: 'EKS_CLOUD', contextName: '', credentialsId: 'k8s', namespace: 'default', restrictKubeConfigAccess: false, serverUrl: 'https://B18E12BF81A02624B83DD385816C9EF6.gr7.ap-south-1.eks.amazonaws.com') {
-                        sh "kubectl apply -f deployment.yaml"
-                        sh "kubectl apply -f service.yaml"
+                        sh 'sudo docker push sonbarse17/springboot:1.0'
                     }
                 }
+                echo '******** Successfully Pushed Image To DockerHub **********'
             }
         }
 
+
+        stage('docker run') {
+            steps {
+                echo '***** Running Docker Container *******'
+                script {
+                    sh 'sudo docker run -d -p 8080:8080 sonbarse17/springboot:1.0'
+                }
+                echo '***** Running Docker Container *******'
+            }
+        }
     }
 }
-        
